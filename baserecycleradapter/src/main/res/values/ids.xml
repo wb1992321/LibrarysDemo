@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="viewholder_tag_sparse_array" type="id"/>
+    <item name="recycler_list_position_tag" type="id"/>
+
+    <item name="swipe_item_position" type="id"/>
+</resources>
