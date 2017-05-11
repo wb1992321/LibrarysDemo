@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 import cn.wang.adapter.StringArrayAdapter;
 import cn.wang.adapter.SwipeAdapter;
+import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.adapter.beans.EmptyItem;
 import cn.wang.adapter.listeners.OnItemClickListener;

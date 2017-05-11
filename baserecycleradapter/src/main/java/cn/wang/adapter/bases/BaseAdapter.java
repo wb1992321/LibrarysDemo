@@ -66,7 +66,7 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                     list.add(message.arg1, (T) message.obj);
                     notifyItemChanged(message.arg1);
                     notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
-                }else if (message.arg1>=0&&message.arg1<getItemCount()){
+                } else if (message.arg1 >= 0 && message.arg1 < getItemCount()) {
                     notifyItemChanged(message.arg1);
 //                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
                 }
@@ -148,6 +148,14 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
         handler.sendMessage(handler.obtainMessage(Constant.TYPE_ADD_LIST, isClear ? -1 : getItemCount(), 0, collection));
     }
 
+    public void addList(Collection<? extends T> collection) {
+        addList(false, collection);
+    }
+
+    public void addList(int position, Collection<? extends T> collection) {
+        handler.sendMessage(handler.obtainMessage(Constant.TYPE_ADD_LIST, position, 0, collection));
+    }
+
     public void add(T item) {
         add(getItemCount(), item);
     }
@@ -177,8 +185,8 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
             handler.sendMessage(handler.obtainMessage(Constant.TYPE_DELETE_ITEM, position, 0, null));
     }
 
-    public void updateItem(int position){
-        if (position>=0&&position<getItemCount()){
+    public void updateItem(int position) {
+        if (position >= 0 && position < getItemCount()) {
             handler.sendMessage(handler.obtainMessage(Constant.TYPE_UPDATE_ITEM, position, 0, null));
         }
     }
