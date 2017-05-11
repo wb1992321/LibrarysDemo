@@ -13,7 +13,8 @@ allprojects {
 - 添加依赖关系
 ```
 dependencies {
-	        compile 'com.github.wb1992321.LibrarysDemo:baserecycleradapter:1.0.0'
+	       compile 'com.github.wb1992321.LibrarysDemo:baserecycleradapter:1.0.1'
+
 	}
 ```
 
