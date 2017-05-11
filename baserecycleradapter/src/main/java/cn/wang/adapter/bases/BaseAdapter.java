@@ -92,6 +92,8 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
         this.list = new ArrayList<>(0);
     }
 
+    public final Context getContext(){return this.context;}
+
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (getLayoutId(viewType) == 0) return null;

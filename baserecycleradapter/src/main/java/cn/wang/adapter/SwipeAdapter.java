@@ -74,7 +74,6 @@ public abstract class SwipeAdapter extends BaseEmptyAdapter implements SwipeLayo
 
     @Override
     public void onStartOpen(SwipeLayout layout) {
-        Log.d("closeSwipe", "onStartOpen");
         if (mSwipeLayout != layout) {
             closeSwipe();
         }
@@ -82,7 +81,6 @@ public abstract class SwipeAdapter extends BaseEmptyAdapter implements SwipeLayo
 
     @Override
     public void onOpen(SwipeLayout layout) {
-        Log.d("closeSwipe", "onOpen");
         if (mSwipeLayout != layout) {
             closeSwipe();
         }
@@ -108,25 +106,19 @@ public abstract class SwipeAdapter extends BaseEmptyAdapter implements SwipeLayo
 
     }
 
-    @Override
-    public void deleteItem(int position) {
-        Log.d("closeSwipe", "deleteItem");
-        closeSwipe();
-        super.deleteItem(position);
-    }
-
-    @Override
-    public void deleteItem(ItemBean item) {
-        closeSwipe();
-        super.deleteItem(item);
-    }
-
     private int getSwipePosition() {
         return mSwipeLayout == null ? -1 : (int) (mSwipeLayout.getTag(R.id.swipe_item_position) == null ? -1 : mSwipeLayout.getTag(R.id.swipe_item_position));
     }
 
+    @Override
+    protected void handleMsg(Message message) {
+        if (message.what==Constant.TYPE_DELETE_ALL||message.what==Constant.TYPE_DELETE_ITEM){
+            closeSwipe();
+        }
+        super.handleMsg(message);
+    }
+
     private boolean closeSwipe() {
-        Log.d("closeSwipe", "closeSwipe");
         if (mSwipeLayout != null && mSwipeLayout.getOpenStatus() != SwipeLayout.Status.Close) {
             mSwipeLayout.close();
             mSwipeLayout = null;
