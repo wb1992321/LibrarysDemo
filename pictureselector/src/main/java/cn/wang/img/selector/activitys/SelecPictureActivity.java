@@ -26,7 +26,9 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 
+import cn.wang.adapter.listeners.OnItemClickListener;
 import cn.wang.img.selector.R;
+import cn.wang.img.selector.adapters.PicPreviewAdapter;
 import cn.wang.img.selector.adapters.SelectPictureAdapter;
 import cn.wang.img.selector.db.BucketEvent;
 import cn.wang.img.selector.db.PictureEvent;
@@ -41,7 +43,7 @@ import rx.Observable;
  * author : wangshuai Created on 2017/5/16
  * email : wangs1992321@gmail.com
  */
-public class SelecPictureActivity extends AppCompatActivity {
+public class SelecPictureActivity extends AppCompatActivity implements OnItemClickListener {
 
     private static final String TAG = "SelecPictureActivity";
 
@@ -78,7 +80,8 @@ public class SelecPictureActivity extends AppCompatActivity {
                 }, throwable -> Log.d("LoadPictureService", "异常", throwable));
 
         adapter = new SelectPictureAdapter(this);
-        PictureStagger stagger = new PictureStagger(adapter, 5);
+        adapter.setOnItemClickListener(this);
+        PictureStagger stagger = new PictureStagger(adapter, 2);
         adapter.setLookup(stagger);
 //        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         layoutManager = new GridLayoutManager(this, stagger.getColumnCount(), LinearLayoutManager.VERTICAL, false);
@@ -155,10 +158,20 @@ public class SelecPictureActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(PictureEvent event) {
-        if (event.getAction() == PictureEvent.ACTION_SELECT) {
+        if (event.getAction().equals(PictureEvent.ACTION_SELECT)) {
             actionOkText();
-        } else if (event.getAction() == PictureEvent.ACTION_LOADFINISH) {
+            if (event.getPictureModel() != null) {
+                adapter.changeSelect(true, event.getPictureModel());
+            }
+        } else if (event.getAction() .equals(PictureEvent.ACTION_SELECT_CANCEL)) {
+            actionOkText();
+            if (event.getPictureModel() != null) {
+                adapter.changeSelect(false, event.getPictureModel());
+            }
+        } else if (event.getAction().equals(PictureEvent.ACTION_LOADFINISH)) {
             initData();
+        } else if (event.getAction().equals(PictureEvent.ACTION_SELECT_CHECK)) {
+            EventBus.getDefault().post(new PictureEvent(adapter.getSelectPhotoIds().contains(event.getPictureModel().getPhotoId()) ? PictureEvent.ACTION_SELECT : PictureEvent.ACTION_SELECT_CANCEL, event.getPictureModel()));
         }
     }
 
@@ -181,4 +194,10 @@ public class SelecPictureActivity extends AppCompatActivity {
         changeBucket(null);
     }
 
+    @Override
+    public void onItemClick(int position, View contentView) {
+        if (adapter.getItemViewType(position) == PictureStagger.TYPE_PICTURE) {
+            PicPreviewActivity.open(this, mBucketModel == null ? null : mBucketModel.getBucketId(), ((PictureModel) adapter.getItem(position)).getLocalPath());
+        }
+    }
 }

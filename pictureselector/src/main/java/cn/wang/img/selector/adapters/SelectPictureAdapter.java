@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.ViewHolder;
@@ -160,6 +161,11 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
     public int getSelectCount(){
         return selPicIds.size();
+    }
+
+
+    public List<String> getSelectPhotoIds(){
+        return selPicIds;
     }
 
     public void changeSelect(boolean isChecked, PictureModel model) {

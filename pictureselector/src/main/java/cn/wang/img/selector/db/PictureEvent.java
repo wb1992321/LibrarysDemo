@@ -3,6 +3,8 @@ package cn.wang.img.selector.db;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import cn.wang.img.selector.models.PictureModel;
+
 /**
  * author : wangshuai Created on 2017/5/16
  * email : wangs1992321@gmail.com
@@ -11,9 +13,12 @@ public class PictureEvent implements Parcelable {
 
     public static final String ACTION_LOADFINISH = "action_load_finish";
 
-    public static final String ACTION_SELECT="action_select";
-
+    public static final String ACTION_SELECT_CHECK="action_select_check";
+    public static final String ACTION_SELECT = "action_select";
+    public static final String ACTION_SELECT_CANCEL = "action_select_cancel";
     private String action;
+
+    private PictureModel pictureModel;
 
     public PictureEvent(String action) {
         this.action = action;
@@ -24,8 +29,21 @@ public class PictureEvent implements Parcelable {
         return action;
     }
 
+    public PictureEvent(String action, PictureModel pictureModel) {
+        this.action = action;
+        this.pictureModel = pictureModel;
+    }
+
     public void setAction(String action) {
         this.action = action;
+    }
+
+    public PictureModel getPictureModel() {
+        return pictureModel;
+    }
+
+    public void setPictureModel(PictureModel pictureModel) {
+        this.pictureModel = pictureModel;
     }
 
     @Override

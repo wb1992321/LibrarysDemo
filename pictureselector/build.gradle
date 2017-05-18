@@ -47,4 +47,6 @@ dependencies {
 
     compile 'com.alibaba:fastjson:1.1.57.android'
 
+    compile 'com.commit451:PhotoView:1.2.5'
+
 }
