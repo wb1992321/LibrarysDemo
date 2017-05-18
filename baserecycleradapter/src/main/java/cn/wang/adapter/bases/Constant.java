@@ -12,4 +12,5 @@ public class Constant {
     public static final int TYPE_ADD_LIST = 999999;
 
     public static final int TYPE_UPDATE_ITEM = 888888;
+    public static final int TYPE_UPDATE_LIST = 888886;
 }

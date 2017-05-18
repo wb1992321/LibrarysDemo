@@ -55,9 +55,13 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                     }
                     if (message.arg1 >= 0 && message.arg1 <= getItemCount()) {
                         boolean flag = list.addAll(message.arg1, (Collection<T>) message.obj);
-                        notifyItemRangeInserted(message.arg1, getItemCount() - message.arg1);
                     }
-                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
+                    if (message.arg1 <= 0) {
+                        notifyDataSetChanged();
+                    } else {
+                        notifyItemRangeInserted(message.arg1, getItemCount() - message.arg1);
+                        notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
+                    }
                 }
                 break;
             case Constant.TYPE_UPDATE_ITEM:
@@ -65,10 +69,23 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                     list.remove(message.arg1);
                     list.add(message.arg1, (T) message.obj);
                     notifyItemChanged(message.arg1);
-                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
+//                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
                 } else if (message.arg1 >= 0 && message.arg1 < getItemCount()) {
                     notifyItemChanged(message.arg1);
 //                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
+                }
+                break;
+            case Constant.TYPE_UPDATE_LIST:
+                if (message.obj != null && message.arg1 >= 0 && message.arg1 < getItemCount()) {
+                    for (int i = 0; i < message.arg2; i++) {
+                        if (message.arg1 < getItemCount()) {
+                            list.remove(message.arg1);
+                        }
+                    }
+                    list.addAll(message.arg1, (Collection<? extends T>) message.obj);
+                    notifyItemRangeChanged(message.arg1, message.arg2);
+                } else if (message.arg1 >= 0 && message.arg1 < getItemCount()) {
+                    notifyItemRangeChanged(message.arg1, message.arg2);
                 }
                 break;
             case Constant.TYPE_DELETE_ITEM:
@@ -92,7 +109,9 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
         this.list = new ArrayList<>(0);
     }
 
-    public final Context getContext(){return this.context;}
+    public final Context getContext() {
+        return this.context;
+    }
 
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -197,6 +216,14 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
         if (containItem(item)) {
             handler.sendMessage(handler.obtainMessage(Constant.TYPE_UPDATE_ITEM, getPosition(item), 0, item));
         }
+    }
+
+    public void updateItem(int position, int count) {
+        handler.sendMessage(handler.obtainMessage(Constant.TYPE_UPDATE_LIST, position, count, null));
+    }
+
+    public void updateItem(int position, int count, Collection<? extends T> collection) {
+        handler.sendMessage(handler.obtainMessage(Constant.TYPE_UPDATE_LIST, position, count, collection));
     }
 
 }

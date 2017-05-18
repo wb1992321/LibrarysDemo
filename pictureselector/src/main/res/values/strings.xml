@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">PictureSelector</string>
+
+    <string name="selected">取消全选</string>
+    <string name="select">全选</string>
+
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="selector_date_title">#666666</color>
+
+    <color name="selector_state_text_color">#F59650</color>
+</resources>

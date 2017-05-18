@@ -1,15 +1,20 @@
 package demo.wang.cn.librarysdemo;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
 
@@ -19,6 +24,7 @@ import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.adapter.beans.EmptyItem;
 import cn.wang.adapter.listeners.OnItemClickListener;
+import cn.wang.img.selector.services.LoadPictureService;
 import demo.wang.cn.librarysdemo.bean.ImageBean;
 
 /**
@@ -48,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
                 adapter.deleteItem(position);
             }
         });
+        new RxPermissions(this).request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
+                .subscribe(aBoolean -> {
+                    if (aBoolean) {
+                        LoadPictureService.start(MainActivity.this);
+                    }
+                },throwable -> Log.d("LoadPictureService","异常",throwable));
+
 
     }
 

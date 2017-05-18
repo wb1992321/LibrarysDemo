@@ -1,1 +1,1 @@
-include ':app', ':baserecycleradapter', ':carouselibrary'
+include ':app', ':baserecycleradapter', ':carouselibrary', ':pictureselector'

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <rotate android:drawable="@drawable/ic_album_book_select_type_close" />
+    </item>
+    <item>
+        <rotate android:drawable="@drawable/ic_album_book_select_type_close" android:fromDegrees="180" />
+    </item>
+</selector>
