@@ -1,23 +1,8 @@
 # baserecycleradapter
 平时开发中整理出来的一些常用的封装和解决方案
-# 用法
-- 在项目根目录下的build.gradle中加入
-```
-allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
-```
-- 添加依赖关系
-```
-dependencies {
-	       compile 'com.github.wb1992321.LibrarysDemo:baserecycleradapter:1.1.2'
-
-	}
-```
-
+# 引入
+- clone下来代码
+- 在自己项目中直接引用library即可
 # 用法
 - 直接继承BaseAdapter，BaseEmptyAdapter，SwipeAdapter就行了
 > 后面SwipeAdapter是继承自BaseEmptyAdapter
