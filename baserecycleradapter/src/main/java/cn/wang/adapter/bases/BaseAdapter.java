@@ -54,7 +54,7 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                         message.arg1 = 0;
                     }
                     if (message.arg1 >= 0 && message.arg1 <= getItemCount()) {
-                        boolean flag = list.addAll(message.arg1, (Collection<T>) message.obj);
+                        list.addAll(message.arg1, (Collection<T>) message.obj);
                     }
                     if (message.arg1 <= 0) {
                         notifyDataSetChanged();

@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -175,10 +176,13 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                 .toList()
                 .map(dateModels -> {
                     ArrayList list = new ArrayList();
+                    ArrayList<Integer> arrayList=new ArrayList<Integer>(0);
                     for (int i = 0; i < dateModels.size(); i++) {
+                        arrayList.add(list.size());
                         list.add(dateModels.get(i));
                         list.addAll(dateModels.get(i).getList());
                     }
+                    adapter.addDateArray(arrayList);
                     return list;
                 })
                 .subscribe(list -> adapter.addList(true, list)
@@ -274,6 +278,15 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_BACK){
+            result(null);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_ok) {
             result();
@@ -302,6 +315,8 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
     private void getResultJSON(List<PictureModel> models) {
         JSONObject jsonObject = JSONObject.parseObject(jsonfromatString);
+        if (models==null)
+            models=new ArrayList<>(0);
         Observable.from(models)
                 .map(model -> JSON.toJSONString(model))
                 .map(s -> getJSONObject(JSONObject.parseObject(s), jsonObject))
@@ -322,12 +337,13 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                             finish();
                             break;
                     }
-                });
+                },throwable -> {});
     }
 
     private void resultPicture(List<PictureModel> models) {
         ArrayList<PictureModel> arrayList = new ArrayList<>(models.size());
-        arrayList.addAll(models);
+        if (models != null && models.size() > 0)
+            arrayList.addAll(models);
         switch (resultAchieveOpproach) {
             case 0:
                 Intent intent = new Intent();

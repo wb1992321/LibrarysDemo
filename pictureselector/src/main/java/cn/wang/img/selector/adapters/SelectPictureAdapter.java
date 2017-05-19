@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -39,6 +40,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
     private int paddingleft = 10;
     private int imageSize = 0;
     private PictureStagger lookup = null;
+    private ArrayList<Integer> dateArray = new ArrayList<>();
 
     private ArrayList<String> selPicIds = new ArrayList<>(0);
     private ArrayList<Long> selDate = new ArrayList<>(0);
@@ -58,12 +60,11 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
     @Override
     public int getItemViewType(int position) {
-        if (getItem(position) instanceof DateModel) {
+        if (dateArray.contains(position)) {
             return PictureStagger.TYPE_DATE_DAY;
-        } else if (getItem(position) instanceof PictureModel) {
+        } else {
             return PictureStagger.TYPE_PICTURE;
         }
-        return 0;
     }
 
     @Override
@@ -91,7 +92,6 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
 
     private void picture(int position, View convertView) {
-        Log.d("adapter", "position===" + position);
         PictureModel model = (PictureModel) getItem(position);
         RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) convertView.getLayoutParams();
         if (params == null)
@@ -106,6 +106,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
                 .crossFade(100)
                 .into(ivImage);
         CheckBox cbSel = ViewHolder.getView(convertView, R.id.cb_sel);
+        cbSel.setOnCheckedChangeListener(null);
         cbSel.setTag(position);
         cbSel.setChecked(selPicIds.contains(model.getPhotoId()) || selDate.contains(model.getDayTime()));
         cbSel.setOnCheckedChangeListener(this);
@@ -117,6 +118,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         TextView tvTitle = ViewHolder.getView(convertView, R.id.tv_title);
         tvTitle.setText(DateUtils.format(model.getDayTime(), DateUtils.FORMAT_DATE_DAY));
         MyCheckTextView tvCheck = ViewHolder.getView(convertView, R.id.tv_check);
+        tvCheck.setOnCheckedChangeListener(null);
         tvCheck.setTag(position);
         tvCheck.setChecked(selDate.contains(model.getDayTime()));
         tvCheck.setOnCheckedChangeListener(this);
@@ -129,9 +131,22 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
             DateModel dateModel = (DateModel) getItem(position);
             if (isChecked) {
                 if (!selDate.contains(dateModel.getDayTime())) {
-                    selDate.add(dateModel.getDayTime());
                     Observable.from(dateModel.getList())
                             .filter(pictureModel -> !selPicIds.contains(pictureModel.getPhotoId()))
+                            .toList()
+                            .filter(models -> {
+                                boolean flag = models.size() + selPicIds.size() > maxSize;
+                                if (flag) {
+                                    models.clear();
+                                    ToastUtils.show(getContext(), getContext().getString(R.string.pic_max_count, maxSize));
+                                    selDate.remove(dateModel.getDayTime());
+                                    updateItem(dateModel);
+                                } else {
+                                    selDate.add(dateModel.getDayTime());
+                                }
+                                return !flag;
+                            })
+                            .flatMap(models -> Observable.from(models))
                             .doOnNext(pictureModel -> selPicIds.add(pictureModel.getPhotoId()))
                             .toList()
                             .subscribeOn(Schedulers.io())
@@ -213,5 +228,8 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         return true;
     }
 
-
+    public void addDateArray(List<Integer> list) {
+        dateArray.clear();
+        dateArray.addAll(list);
+    }
 }
