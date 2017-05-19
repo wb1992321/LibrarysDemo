@@ -43,6 +43,7 @@ import cn.wang.img.selector.Utils.ToastUtils;
 import cn.wang.img.selector.adapters.PicPreviewAdapter;
 import cn.wang.img.selector.adapters.SelectPictureAdapter;
 import cn.wang.img.selector.db.BucketEvent;
+import cn.wang.img.selector.db.LoadEvent;
 import cn.wang.img.selector.db.PictureEvent;
 import cn.wang.img.selector.db.PictureResultEvent;
 import cn.wang.img.selector.db.ResultEvent;
@@ -152,7 +153,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
         adapter = new SelectPictureAdapter(this, maxSize);
         adapter.setOnItemClickListener(this);
-        PictureStagger stagger = new PictureStagger(adapter, 2);
+        PictureStagger stagger = new PictureStagger(adapter, 4);
         adapter.setLookup(stagger);
 //        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         layoutManager = new GridLayoutManager(this, stagger.getColumnCount(), LinearLayoutManager.VERTICAL, false);
@@ -171,21 +172,22 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
 
     private void initData() {
-        tvTitle.setText(mBucketModel == null ? "全部照片" : mBucketModel.getBucketDisplayName());
         PictureModel.getBucketAllDatePictures(mBucketModel == null ? null : mBucketModel.getBucketId())
                 .toList()
                 .map(dateModels -> {
                     ArrayList list = new ArrayList();
-                    ArrayList<Integer> arrayList=new ArrayList<Integer>(0);
                     for (int i = 0; i < dateModels.size(); i++) {
-                        arrayList.add(list.size());
                         list.add(dateModels.get(i));
                         list.addAll(dateModels.get(i).getList());
                     }
-                    adapter.addDateArray(arrayList);
                     return list;
                 })
-                .subscribe(list -> adapter.addList(true, list)
+                .doOnNext(arrayList -> adapter.addList(true, arrayList))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(list -> {
+                            tvTitle.setText(mBucketModel == null ? "全部照片" : mBucketModel.getBucketDisplayName());
+                        }
                         , throwable -> Log.d(TAG, "异常", throwable));
     }
 
@@ -231,6 +233,13 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         changeBucket(view);
     }
 
+    @Subscribe
+    public void onEvent(LoadEvent event) {
+        if (event.getState() == 1) {
+            initData();
+        }
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(PictureEvent event) {
         if (event.getAction().equals(PictureEvent.ACTION_SELECT)) {
@@ -244,8 +253,6 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                 adapter.changeSelect(false, event.getPictureModel());
             }
             actionOkText();
-        } else if (event.getAction().equals(PictureEvent.ACTION_LOADFINISH)) {
-            initData();
         } else if (event.getAction().equals(PictureEvent.ACTION_SELECT_CHECK)) {
             EventBus.getDefault().post(new PictureEvent(adapter.getSelectPhotoIds().contains(event.getPictureModel().getPhotoId()) ? PictureEvent.ACTION_SELECT : PictureEvent.ACTION_SELECT_CANCEL, event.getPictureModel()));
         }
@@ -279,7 +286,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode==KeyEvent.KEYCODE_BACK){
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             result(null);
             return true;
         }
@@ -315,8 +322,8 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
     private void getResultJSON(List<PictureModel> models) {
         JSONObject jsonObject = JSONObject.parseObject(jsonfromatString);
-        if (models==null)
-            models=new ArrayList<>(0);
+        if (models == null)
+            models = new ArrayList<>(0);
         Observable.from(models)
                 .map(model -> JSON.toJSONString(model))
                 .map(s -> getJSONObject(JSONObject.parseObject(s), jsonObject))
@@ -337,7 +344,8 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                             finish();
                             break;
                     }
-                },throwable -> {});
+                }, throwable -> {
+                });
     }
 
     private void resultPicture(List<PictureModel> models) {

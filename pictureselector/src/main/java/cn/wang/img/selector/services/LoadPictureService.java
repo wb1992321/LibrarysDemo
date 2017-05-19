@@ -17,6 +17,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.File;
 
 import cn.wang.img.selector.Utils.DateUtils;
+import cn.wang.img.selector.db.LoadEvent;
 import cn.wang.img.selector.models.BucketModel;
 import cn.wang.img.selector.models.PictureModel;
 import cn.wang.img.selector.Utils.MediaStoreCursorHelper;
@@ -54,7 +55,7 @@ public class LoadPictureService extends IntentService {
                             .beginTransactionAsync(FastStoreModelTransaction.saveBuilder(FlowManager.getModelAdapter(PictureModel.class))
                                     .addAll(pictureModels)
                                     .build()).build().execute();
-                    EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_LOADFINISH));
+                    EventBus.getDefault().post(new LoadEvent(1));
                 })
                 .flatMap(pictureModel -> PictureModel.getOldData(startTime))
                 .filter(pictureModel -> TextUtils.isEmpty(pictureModel.getPhotoId()) || TextUtils.isEmpty(pictureModel.getLocalPath()) || !new File(pictureModel.getLocalPath()).exists())
@@ -62,15 +63,5 @@ public class LoadPictureService extends IntentService {
                     pictureModel.delete();
                 }, throwable -> {
                 });
-//        Observable.from(PictureModel.getBucketAllData(null))
-//                .subscribe(pictureModel -> Log.d(TAG,"locaPath:"+pictureModel.getDayTime()+"")
-//                ,throwable -> Log.e(TAG,"异常",throwable));
-        PictureModel.getBucketAllDatePictures("-1739773001")
-                .subscribe(dateModel -> Log.d(TAG, "day:" + DateUtils.format(dateModel.getDayTime(), DateUtils.FORMAT_DATE_DAY) + "------" + dateModel.getList().size()), throwable -> Log.d(TAG, "异常"));
-        BucketModel.getAllBucket()
-                .subscribe(bucketModel -> {
-                    Log.d(TAG,"------------");
-                    Log.d(TAG, bucketModel.getCount()+"---"+bucketModel.getLocalPath());
-                },throwable -> {Log.d(TAG,"异常",throwable);});
     }
 }

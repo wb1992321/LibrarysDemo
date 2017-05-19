@@ -21,6 +21,9 @@
         <service android:name=".services.LoadPictureService"/>
         <activity android:name=".activitys.SelecPictureActivity"/>
         <activity android:name=".activitys.PicPreviewActivity"/>
+        <meta-data
+            android:name="cn.wang.img.selector.models.MyGlideModel"
+            android:value="GlideModule"/>
     </application>
 
 </manifest>

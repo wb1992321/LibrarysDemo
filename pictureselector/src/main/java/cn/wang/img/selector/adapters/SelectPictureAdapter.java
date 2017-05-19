@@ -1,6 +1,7 @@
 package cn.wang.img.selector.adapters;
 
 import android.content.Context;
+import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,6 +18,7 @@ import com.bumptech.glide.Glide;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import cn.wang.adapter.bases.BaseAdapter;
@@ -30,6 +32,7 @@ import cn.wang.img.selector.models.PictureModel;
 import cn.wang.img.selector.views.MyCheckTextView;
 import cn.wang.img.selector.views.PictureStagger;
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 /**
@@ -40,8 +43,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
     private int paddingleft = 10;
     private int imageSize = 0;
     private PictureStagger lookup = null;
-    private ArrayList<Integer> dateArray = new ArrayList<>();
-
+    public static final String TAG="SelectPictureAdapter";
     private ArrayList<String> selPicIds = new ArrayList<>(0);
     private ArrayList<Long> selDate = new ArrayList<>(0);
 
@@ -60,7 +62,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
     @Override
     public int getItemViewType(int position) {
-        if (dateArray.contains(position)) {
+        if (getItem(position) instanceof DateModel) {
             return PictureStagger.TYPE_DATE_DAY;
         } else {
             return PictureStagger.TYPE_PICTURE;
@@ -101,10 +103,15 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         params.topMargin = paddingleft;
         convertView.setLayoutParams(params);
         ImageView ivImage = ViewHolder.getView(convertView, R.id.iv_image);
-        Glide.with(getContext())
-                .load(model.getLocalPath())
-                .crossFade(100)
-                .into(ivImage);
+
+        Observable.defer(() -> Observable.just(model.getLocalPath()))
+                .map(s -> Glide.with(getContext())
+                        .load("file://"+s)
+                        .placeholder(R.drawable.default_image)
+                        .crossFade(100))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(d -> d.into(ivImage));
         CheckBox cbSel = ViewHolder.getView(convertView, R.id.cb_sel);
         cbSel.setOnCheckedChangeListener(null);
         cbSel.setTag(position);
@@ -228,8 +235,20 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         return true;
     }
 
-    public void addDateArray(List<Integer> list) {
-        dateArray.clear();
-        dateArray.addAll(list);
+    public List getDataList(){
+        return list;
     }
+
+    @Override
+    public void addList(boolean isClear, Collection collection) {
+        super.addList(isClear, collection);
+    }
+
+    @Override
+    protected void handleMsg(Message message) {
+        Log.d(TAG,"TYPE_ADD_LIST start");
+        super.handleMsg(message);
+        Log.d(TAG,"TYPE_ADD_LIST end");
+    }
+
 }
