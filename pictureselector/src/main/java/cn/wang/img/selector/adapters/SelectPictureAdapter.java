@@ -94,25 +94,36 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
 
     private void picture(int position, View convertView) {
+        ImageView ivImage = ViewHolder.getView(convertView, R.id.iv_image);
+        CheckBox cbSel = ViewHolder.getView(convertView, R.id.cb_sel);
+        View vChecked = ViewHolder.getView(convertView, R.id.v_checked);
         PictureModel model = (PictureModel) getItem(position);
         RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) convertView.getLayoutParams();
-        if (params == null)
+        if (params == null) {
             params = new RecyclerView.LayoutParams(paddingleft + imageSize, imageSize);
+        }
         params.width = paddingleft + imageSize;
         params.height = imageSize;
         params.topMargin = paddingleft;
         convertView.setLayoutParams(params);
-        ImageView ivImage = ViewHolder.getView(convertView, R.id.iv_image);
 
-        Glide.with(getContext())
-                .load(model.getLocalPath())
-                .crossFade(100).into(ivImage);
-        CheckBox cbSel = ViewHolder.getView(convertView, R.id.cb_sel);
-        cbSel.setOnCheckedChangeListener(null);
-        cbSel.setTag(position);
-        cbSel.setChecked(selPicIds.contains(model.getPhotoId()) || selDate.contains(model.getDayTime()));
-        cbSel.setOnCheckedChangeListener(this);
-        ViewHolder.getView(convertView, R.id.v_checked).setVisibility(cbSel.isChecked() ? View.VISIBLE : View.GONE);
+        if (TextUtils.isEmpty(model.getPhotoId())) {
+            cbSel.setVisibility(View.GONE);
+            vChecked.setVisibility(View.GONE);
+            Glide.with(getContext())
+                    .load(R.drawable.ic_photo_select_camera)
+                    .crossFade()
+                    .into(ivImage);
+        } else {
+            Glide.with(getContext())
+                    .load(model.getLocalPath())
+                    .crossFade(100).into(ivImage);
+            cbSel.setOnCheckedChangeListener(null);
+            cbSel.setTag(position);
+            cbSel.setChecked(selPicIds.contains(model.getPhotoId()) || selDate.contains(model.getDayTime()));
+            cbSel.setOnCheckedChangeListener(this);
+            vChecked.setVisibility(cbSel.isChecked() ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void dateTime(int position, View convertView) {

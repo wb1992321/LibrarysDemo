@@ -31,6 +31,17 @@
 
         </activity>
         <service android:name="cn.wang.img.selector.services.LoadPictureService"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="demo.wang.cn.librarysdemo.fileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
     </application>
 
 </manifest>

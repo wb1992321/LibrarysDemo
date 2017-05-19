@@ -2,6 +2,7 @@ package cn.wang.img.selector.services;
 
 import android.app.Activity;
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.support.annotation.Nullable;
@@ -38,7 +39,8 @@ public class LoadPictureService extends IntentService {
     }
 
 
-    public static void start(Activity activity) {
+    public static void start(Context activity) {
+        Log.d(TAG,"start");
         activity.startService(new Intent(activity, LoadPictureService.class));
     }
 

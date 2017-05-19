@@ -5,10 +5,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -32,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +67,7 @@ import rx.schedulers.Schedulers;
  * author : wangshuai Created on 2017/5/16
  * email : wangs1992321@gmail.com
  */
-public class SelecPictureActivity extends AppCompatActivity implements OnItemClickListener {
+public class SelecPictureActivity extends AppCompatActivity implements OnItemClickListener, MediaScannerConnection.OnScanCompletedListener {
 
     public static final String RESULT_DATA = "result_data";
     public static final String INTENT_EXTRA_COLUMN_COUNT = "intent_extra_column_count";
@@ -152,12 +159,6 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         tvTitle.setText("所有照片");
-        new RxPermissions(this).request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
-                .subscribe(aBoolean -> {
-                    if (aBoolean) {
-                        LoadPictureService.start(SelecPictureActivity.this);
-                    }
-                }, throwable -> Log.d("LoadPictureService", "异常", throwable));
 
         adapter = new SelectPictureAdapter(this, maxSize);
         adapter.setOnItemClickListener(this);
@@ -168,8 +169,18 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         layoutManager.setSpanSizeLookup(stagger);
         rvPicList.setLayoutManager(layoutManager);
         rvPicList.setAdapter(adapter);
+        startLoadPictures();
         initData();
         EventBus.getDefault().register(this);
+    }
+
+    private void startLoadPictures() {
+        new RxPermissions(this).request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
+                .subscribe(aBoolean -> {
+                    if (aBoolean) {
+                        LoadPictureService.start(SelecPictureActivity.this);
+                    }
+                }, throwable -> Log.d("LoadPictureService", "异常", throwable));
     }
 
     @Override
@@ -188,6 +199,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                         list.add(dateModels.get(i));
                         list.addAll(dateModels.get(i).getList());
                     }
+                    list.add(0, new PictureModel());
                     return list;
                 })
                 .doOnNext(arrayList -> adapter.addList(true, arrayList))
@@ -285,12 +297,88 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         changeBucket(null);
     }
 
+    //=================拍照=========================
+
+    private File mPhotoFile;
+
+    private static final int PHOTO_SELECT_CAMERA_REQUEST_CODE = 1992;
+
+    public static File getSystemPhotoDir() {
+        File root = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DCIM);
+        root = new File(root, "Camera");
+
+        if (!root.exists()) {
+            root.mkdirs();
+        }
+        return root;
+    }
+
+    private File getPhotoFile() {
+        File file = getSystemPhotoDir();
+        if (mBucketModel != null && !TextUtils.isEmpty(mBucketModel.getBucketId()))
+            file = new File(mBucketModel.getLocalPath());
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        if (file != null)
+            file = new File(file, System.currentTimeMillis() + ".jpg");
+        return file;
+    }
+
+    private void intentCamera() {
+        mPhotoFile = getPhotoFile();
+        Log.d(TAG, mPhotoFile == null ? "null" : mPhotoFile.getAbsolutePath());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            String filePK = String.format("%s.fileProvider", getApplication().getPackageName());
+            Log.d(TAG, "filePK==" + filePK);
+            Uri imageUri = FileProvider.getUriForFile(this,
+                    filePK, mPhotoFile);//通过FileProvider创建一个content类型的Uri
+            Intent intent = new Intent();
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); //添加这一句表示对目标应用临时授权该Uri所代表的文件
+            intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);//设置Action为拍照
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);//将拍取的照片保存到指定URI
+            startActivityForResult(intent, PHOTO_SELECT_CAMERA_REQUEST_CODE);
+        } else {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mPhotoFile));
+            startActivityForResult(takePictureIntent, PHOTO_SELECT_CAMERA_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PHOTO_SELECT_CAMERA_REQUEST_CODE) {
+            Log.d(TAG, mPhotoFile == null ? "null" : mPhotoFile.getAbsolutePath());
+            Log.d(TAG,"resuleCode=="+resultCode);
+            if (resultCode == Activity.RESULT_OK) {
+                if (mPhotoFile != null) {
+//                    ImageUtil.scanMediaJpegFile(this, mPhotoFile, this);
+                    MediaScannerConnection
+                            .scanFile(this, new String[]{mPhotoFile.getAbsolutePath()}, new String[]{"image/jpg"},
+                                    this);
+                }
+            } else {
+                if (mPhotoFile != null) mPhotoFile.delete();
+            }
+        }
+    }
+
+    //=================拍照 end=========================
+
     @Override
     public void onItemClick(int position, View contentView) {
         if (adapter.getItemViewType(position) == PictureStagger.TYPE_PICTURE) {
-            PicPreviewActivity.open(this, mBucketModel == null ? null : mBucketModel.getBucketId(), ((PictureModel) adapter.getItem(position)).getLocalPath(), maxSize, adapter.getSelectPhotoIds());
+            PictureModel model = (PictureModel) adapter.getItem(position);
+            if (TextUtils.isEmpty(model.getPhotoId())) {
+                intentCamera();
+            } else {
+                PicPreviewActivity.open(this, mBucketModel == null ? null : mBucketModel.getBucketId(), model.getLocalPath(), maxSize, adapter.getSelectPhotoIds());
+            }
         }
     }
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -383,4 +471,9 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         }
     }
 
+    @Override
+    public void onScanCompleted(String path, Uri uri) {
+        Log.d(TAG, "onScanCompleted");
+        startLoadPictures();
+    }
 }
