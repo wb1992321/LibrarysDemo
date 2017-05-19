@@ -19,6 +19,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
+
 import cn.wang.adapter.bases.Constant;
 import cn.wang.adapter.listeners.OnItemClickListener;
 import cn.wang.img.selector.R;
@@ -37,6 +39,8 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
 
     public static final String INTENT_EXTRA_BUCKET = "intent_extra_bucket_id";
     public static final String INTENT_EXTRA_IMAGE_URL = "intent_extra_image_url";
+    public static final String INTENT_EXTRA_SEL_PIC = "intent_extra_sel_pic";
+    public static final String INTENT_EXTRA_MAX_SIZE = "intent_extra_max_size";
 
     private RecyclerView rvPicList;
     private TextView tvPosition;
@@ -44,18 +48,25 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
 
     private String mBucketId, mCurrentPicturePath;
     private PictureModel mCurrentPictureModel;
+    private int maxSize = Integer.MAX_VALUE;
 
+    private ArrayList<String> selPicIds = new ArrayList<>(0);
 
     private PicPreviewAdapter adapter;
     private LinearLayoutManager manager;
 
     public static void open(Context context, String currentPath) {
-        open(context, null, currentPath);
+        open(context, null, currentPath, 0, null);
     }
 
-    public static void open(Context context, String bucketId, String currentPath) {
+    public static void open(Context context, String bucketId, String currentPath, int maxSize, ArrayList<String> list) {
         Intent intent = new Intent(context, PicPreviewActivity.class);
         intent.putExtra(INTENT_EXTRA_IMAGE_URL, currentPath);
+        if (maxSize >= 0)
+            intent.putExtra(INTENT_EXTRA_MAX_SIZE, maxSize);
+        if (list != null && list.size() > 0) {
+            intent.putStringArrayListExtra(PicPreviewActivity.INTENT_EXTRA_SEL_PIC, list);
+        }
         if (!TextUtils.isEmpty(bucketId))
             intent.putExtra(INTENT_EXTRA_BUCKET, bucketId);
         context.startActivity(intent);
@@ -72,6 +83,11 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
 
         mBucketId = getIntent().getStringExtra(INTENT_EXTRA_BUCKET);
         mCurrentPicturePath = getIntent().getStringExtra(INTENT_EXTRA_IMAGE_URL);
+        selPicIds = getIntent().getStringArrayListExtra(INTENT_EXTRA_SEL_PIC);
+        maxSize = getIntent().getIntExtra(INTENT_EXTRA_MAX_SIZE, maxSize);
+        if (selPicIds == null) selPicIds = new ArrayList<>(0);
+
+        if (maxSize <= 0) cbSel.setVisibility(View.GONE);
 
         adapter = new PicPreviewAdapter(this);
         adapter.setLoadFinish(this);
@@ -86,20 +102,17 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 int postion = manager.findFirstVisibleItemPosition();
-                tvPosition.setText(String.format("%d / %d", postion + 1, adapter.getItemCount()));
-                mCurrentPictureModel = adapter.getItem(postion);
-                EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT_CHECK, mCurrentPictureModel));
+                if (postion != adapter.getPosition(mCurrentPictureModel)) {
+                    tvPosition.setText(String.format("%d / %d", postion + 1, adapter.getItemCount()));
+                    mCurrentPictureModel = adapter.getItem(postion);
+                    if (maxSize > 0)
+                        cbSel.setChecked(selPicIds.contains(mCurrentPictureModel.getPhotoId()));
+                }
             }
         });
         initData();
-        EventBus.getDefault().register(this);
     }
 
-    @Override
-    protected void onDestroy() {
-        EventBus.getDefault().unregister(this);
-        super.onDestroy();
-    }
 
     private void initData() {
         Observable.defer(() -> Observable.from(PictureModel.getBucketAllPicture(mBucketId)))
@@ -122,18 +135,7 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
                 });
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(PictureEvent event) {
-        if (event.getPictureModel() != null && event.getPictureModel().equals(mCurrentPictureModel)) {
-            if (event.getAction().equals(PictureEvent.ACTION_SELECT)) {
-                cbSel.setChecked(true);
-            } else if (event.getAction().equals(PictureEvent.ACTION_SELECT_CANCEL)) {
-                cbSel.setChecked(false);
-            }
-        }
-    }
-
-    public void closeUI(View view){
+    public void closeUI(View view) {
         finish();
     }
 
@@ -142,6 +144,8 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
         if (what == Constant.TYPE_ADD_LIST) {
             tvPosition.setText(String.format("%d / %d", adapter.getPosition(mCurrentPictureModel) + 1, adapter.getItemCount()));
             rvPicList.scrollToPosition(adapter.getPosition(mCurrentPictureModel));
+            if (maxSize > 0)
+                cbSel.setChecked(selPicIds.contains(mCurrentPictureModel.getPhotoId()));
         }
 
     }
@@ -149,10 +153,20 @@ public class PicPreviewActivity extends AppCompatActivity implements PicPreviewA
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (isChecked) {
-            EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT, mCurrentPictureModel));
+            if (!selPicIds.contains(mCurrentPictureModel.getPhotoId())) {
+                selPicIds.add(mCurrentPictureModel.getPhotoId());
+                EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT, mCurrentPictureModel));
+            }
+            if (selPicIds.size()>maxSize){
+                buttonView.setChecked(false);
+            }
         } else {
-            EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT_CANCEL, mCurrentPictureModel));
+            if (!selPicIds.contains(mCurrentPictureModel.getPhotoId())) {
+                selPicIds.remove(mCurrentPictureModel.getPhotoId());
+                EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT_CANCEL, mCurrentPictureModel));
+            }
         }
+
     }
 
     @Override

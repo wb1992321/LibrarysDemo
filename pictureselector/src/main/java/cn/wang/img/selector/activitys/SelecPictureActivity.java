@@ -2,6 +2,8 @@ package cn.wang.img.selector.activitys;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,12 +14,17 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
 import org.greenrobot.eventbus.EventBus;
@@ -25,25 +32,46 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.listeners.OnItemClickListener;
 import cn.wang.img.selector.R;
+import cn.wang.img.selector.Utils.ToastUtils;
 import cn.wang.img.selector.adapters.PicPreviewAdapter;
 import cn.wang.img.selector.adapters.SelectPictureAdapter;
 import cn.wang.img.selector.db.BucketEvent;
 import cn.wang.img.selector.db.PictureEvent;
+import cn.wang.img.selector.db.PictureResultEvent;
+import cn.wang.img.selector.db.ResultEvent;
 import cn.wang.img.selector.fragments.BucketFragment;
 import cn.wang.img.selector.models.BucketModel;
 import cn.wang.img.selector.models.PictureModel;
 import cn.wang.img.selector.services.LoadPictureService;
 import cn.wang.img.selector.views.PictureStagger;
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * author : wangshuai Created on 2017/5/16
  * email : wangs1992321@gmail.com
  */
 public class SelecPictureActivity extends AppCompatActivity implements OnItemClickListener {
+
+    public static final String RESULT_DATA = "result_data";
+
+    public static final String INTENT_EXTRA_MAX_SIZE = "intent_extra_max_size";
+    public static final String INTENT_EXTRA_MIN_SIZE = "intent_extra_min_size";
+    public static final String INTENT_EXTRA_CONFIG_JSON = "intent_extra_config_json";
+    public static final String INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH = "intent_extra_result_achieve_opproach";
+    public static final String INTENT_EXTRA_SEL_PIC = "intent_extra_sel_pic";
+
+    private int maxSize = Integer.MAX_VALUE;
+    private int minSize = -1;
+    private String jsonfromatString = null;
+    private int resultAchieveOpproach = 0;
 
     private static final String TAG = "SelecPictureActivity";
 
@@ -58,9 +86,51 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
     private boolean fragmentShow;
     private MenuItem actionOk;
 
+    /**
+     * @param context       上下文
+     * @param maxSize       最大选中的图片数据
+     * @param resuotAchieve 获取选中图片路径，0，通过forResult方法,1、通过EventBust
+     * @param jsonFormat    返回选中图片对象字段配置
+     * @param photoIds      已经选中的图片id
+     */
+    public static void open(Activity activity, int requestCode, int maxSize, int resuotAchieve, String jsonFormat, ArrayList<String> photoIds) {
+        Intent intent = new Intent(activity, SelecPictureActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt(INTENT_EXTRA_MAX_SIZE, maxSize);
+        bundle.putInt(INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH, resuotAchieve);
+        if (!TextUtils.isEmpty(jsonFormat))
+            bundle.putString(INTENT_EXTRA_CONFIG_JSON, jsonFormat);
+        if (photoIds != null && photoIds.size() > 0)
+            bundle.putStringArrayList(INTENT_EXTRA_SEL_PIC, photoIds);
+        intent.putExtras(bundle);
+        if (resuotAchieve == 0)
+            activity.startActivityForResult(intent, requestCode);
+        else activity.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initIntentExtra();
+        init();
+
+    }
+
+    private void initIntentExtra() {
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            maxSize = bundle.getInt(INTENT_EXTRA_MAX_SIZE, Integer.MAX_VALUE);
+            minSize = bundle.getInt(INTENT_EXTRA_MIN_SIZE);
+            jsonfromatString = bundle.getString(INTENT_EXTRA_CONFIG_JSON);
+            resultAchieveOpproach = bundle.getInt(INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH);
+            ArrayList<String> list = bundle.getStringArrayList(INTENT_EXTRA_SEL_PIC);
+            if (list != null && list.size() > 0) {
+                adapter.getSelectPhotoIds().addAll(list);
+            }
+        }
+    }
+
+    private void init() {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_pic_list);
         rvPicList = (RecyclerView) findViewById(R.id.rv_pic_list);
@@ -79,7 +149,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
                     }
                 }, throwable -> Log.d("LoadPictureService", "异常", throwable));
 
-        adapter = new SelectPictureAdapter(this);
+        adapter = new SelectPictureAdapter(this, maxSize);
         adapter.setOnItemClickListener(this);
         PictureStagger stagger = new PictureStagger(adapter, 2);
         adapter.setLookup(stagger);
@@ -97,6 +167,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
         EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
+
 
     private void initData() {
         tvTitle.setText(mBucketModel == null ? "全部照片" : mBucketModel.getBucketDisplayName());
@@ -159,15 +230,16 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(PictureEvent event) {
         if (event.getAction().equals(PictureEvent.ACTION_SELECT)) {
-            actionOkText();
             if (event.getPictureModel() != null) {
+                Log.d(BaseAdapter.TAG, TAG + "---" + event.getAction());
                 adapter.changeSelect(true, event.getPictureModel());
             }
-        } else if (event.getAction() .equals(PictureEvent.ACTION_SELECT_CANCEL)) {
             actionOkText();
+        } else if (event.getAction().equals(PictureEvent.ACTION_SELECT_CANCEL)) {
             if (event.getPictureModel() != null) {
                 adapter.changeSelect(false, event.getPictureModel());
             }
+            actionOkText();
         } else if (event.getAction().equals(PictureEvent.ACTION_LOADFINISH)) {
             initData();
         } else if (event.getAction().equals(PictureEvent.ACTION_SELECT_CHECK)) {
@@ -197,7 +269,86 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
     @Override
     public void onItemClick(int position, View contentView) {
         if (adapter.getItemViewType(position) == PictureStagger.TYPE_PICTURE) {
-            PicPreviewActivity.open(this, mBucketModel == null ? null : mBucketModel.getBucketId(), ((PictureModel) adapter.getItem(position)).getLocalPath());
+            PicPreviewActivity.open(this, mBucketModel == null ? null : mBucketModel.getBucketId(), ((PictureModel) adapter.getItem(position)).getLocalPath(), maxSize, adapter.getSelectPhotoIds());
         }
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_ok) {
+            result();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void result() {
+        List<PictureModel> models = PictureModel.queryPicturesByIds(adapter.getSelectPhotoIds());
+        if (models == null || models.size() < minSize) {
+            ToastUtils.show(this, getString(R.string.pic_min_count, minSize));
+        } else if (models != null && models.size() > maxSize) {
+            ToastUtils.show(this, getString(R.string.pic_max_count, maxSize));
+        } else {
+            result(models);
+        }
+    }
+
+    private JSONObject getJSONObject(JSONObject model, JSONObject jsonObject) {
+        JSONObject result = new JSONObject();
+        for (String key : jsonObject.keySet()) {
+            result.put(jsonObject.getString(key), model.getString(key));
+        }
+        return result;
+    }
+
+    private void getResultJSON(List<PictureModel> models) {
+        JSONObject jsonObject = JSONObject.parseObject(jsonfromatString);
+        Observable.from(models)
+                .map(model -> JSON.toJSONString(model))
+                .map(s -> getJSONObject(JSONObject.parseObject(s), jsonObject))
+                .toList()
+                .map(jsonObjects -> JSON.toJSONString(jsonObjects))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(s -> {
+                    switch (resultAchieveOpproach) {
+                        case 0:
+                            Intent intent = new Intent();
+                            intent.putExtra(RESULT_DATA, s);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                            break;
+                        case 1:
+                            EventBus.getDefault().post(new ResultEvent(s));
+                            finish();
+                            break;
+                    }
+                });
+    }
+
+    private void resultPicture(List<PictureModel> models) {
+        ArrayList<PictureModel> arrayList = new ArrayList<>(models.size());
+        arrayList.addAll(models);
+        switch (resultAchieveOpproach) {
+            case 0:
+                Intent intent = new Intent();
+                intent.putExtra(RESULT_DATA, arrayList);
+                setResult(RESULT_OK, intent);
+                finish();
+                break;
+            case 1:
+                EventBus.getDefault().post(new PictureResultEvent(arrayList));
+                finish();
+                break;
+        }
+    }
+
+
+    private void result(List<PictureModel> models) {
+        if (TextUtils.isEmpty(jsonfromatString)) {
+            resultPicture(models);
+        } else {
+            getResultJSON(models);
+        }
+    }
+
 }

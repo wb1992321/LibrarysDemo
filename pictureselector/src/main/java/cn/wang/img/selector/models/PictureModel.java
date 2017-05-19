@@ -509,6 +509,12 @@ public class PictureModel extends BaseModel implements Parcelable {
         }
     }
 
+    public static List<PictureModel> queryPicturesByIds(List<String> list){
+        return SQLite.select().from(PictureModel.class)
+                .where(PictureModel_Table._id.in(list))
+                .queryList();
+    }
+
     public static long getBucketPictureCount(String bucketId) {
         if (TextUtils.isEmpty(bucketId)) {
             return SQLite.select().from(PictureModel.class)

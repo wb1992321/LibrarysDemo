@@ -22,6 +22,7 @@ import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.img.selector.R;
 import cn.wang.img.selector.Utils.DateUtils;
+import cn.wang.img.selector.Utils.ToastUtils;
 import cn.wang.img.selector.db.PictureEvent;
 import cn.wang.img.selector.models.DateModel;
 import cn.wang.img.selector.models.PictureModel;
@@ -42,8 +43,11 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
     private ArrayList<String> selPicIds = new ArrayList<>(0);
     private ArrayList<Long> selDate = new ArrayList<>(0);
 
-    public SelectPictureAdapter(Context context) {
+    private int maxSize = -1;
+
+    public SelectPictureAdapter(Context context, int maxSize) {
         super(context);
+        this.maxSize = maxSize;
     }
 
     public void setLookup(PictureStagger lookup) {
@@ -155,22 +159,28 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
             updateItem(position + 1, dateModel.getList().size());
         } else {
             PictureModel model = (PictureModel) getItem(position);
-            changeSelect(isChecked, model);
+            boolean select = changeSelect(isChecked, model);
+
+            Log.d(TAG, "onCheckedChanged");
+
+            if (!select)
+                buttonView.setChecked(!isChecked);
         }
     }
 
-    public int getSelectCount(){
+    public int getSelectCount() {
         return selPicIds.size();
     }
 
 
-    public List<String> getSelectPhotoIds(){
+    public ArrayList<String> getSelectPhotoIds() {
         return selPicIds;
     }
 
-    public void changeSelect(boolean isChecked, PictureModel model) {
+    public boolean changeSelect(boolean isChecked, PictureModel model) {
+        Log.d(TAG, selPicIds.size() + "");
         if (isChecked) {
-            if (!selPicIds.contains(model.getPhotoId())) {
+            if (selPicIds.size() < maxSize && !selPicIds.contains(model.getPhotoId())) {
                 selPicIds.add(model.getPhotoId());
                 DateModel dateModel = (DateModel) getItem(getPosition(new DateModel(model.getDayTime())));
                 Observable.defer(() -> Observable.from(dateModel.getList()))
@@ -185,6 +195,9 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
                             }
                         }, throwable -> {
                         });
+            } else if (selPicIds.size() >= maxSize) {
+                ToastUtils.show(getContext(), getContext().getString(R.string.pic_max_count, maxSize));
+                return false;
             }
         } else {
             if (selPicIds.contains(model.getPhotoId())) {
@@ -197,6 +210,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         }
         EventBus.getDefault().post(new PictureEvent(PictureEvent.ACTION_SELECT));
         updateItem(model);
+        return true;
     }
 
 

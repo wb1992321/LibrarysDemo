@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONObject;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.adapter.beans.EmptyItem;
 import cn.wang.adapter.listeners.OnItemClickListener;
+import cn.wang.img.selector.activitys.SelecPictureActivity;
 import cn.wang.img.selector.services.LoadPictureService;
 import demo.wang.cn.librarysdemo.bean.ImageBean;
 
@@ -49,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(int position, View contentView) {
-                ImageBean imageBean= (ImageBean) adapter.getItem(position);
-                Toast.makeText(MainActivity.this,imageBean.getUrl(),Toast.LENGTH_SHORT).show();
+                ImageBean imageBean = (ImageBean) adapter.getItem(position);
+                Toast.makeText(MainActivity.this, imageBean.getUrl(), Toast.LENGTH_SHORT).show();
                 adapter.deleteItem(position);
             }
         });
@@ -59,20 +61,31 @@ public class MainActivity extends AppCompatActivity {
                     if (aBoolean) {
                         LoadPictureService.start(MainActivity.this);
                     }
-                },throwable -> Log.d("LoadPictureService","异常",throwable));
+                }, throwable -> Log.d("LoadPictureService", "异常", throwable));
 
+        JSONObject format = new JSONObject();
+        format.put("localPath", "url");
 
+        SelecPictureActivity.open(this, 1001, 10, 0, format.toJSONString(), null);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001) {
+            Log.d("MainActivity", data.getStringExtra(SelecPictureActivity.RESULT_DATA));
+        }
     }
 
     private void getData() {
         ArrayList<ImageBean> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            list.add(new ImageBean("aaa"+i));
+            list.add(new ImageBean("aaa" + i));
         }
-        adapter.addList(false,list);
+        adapter.addList(false, list);
     }
 
-    class MyAdapter extends SwipeAdapter{
+    class MyAdapter extends SwipeAdapter {
 
         public MyAdapter(Context context) {
             super(context);
@@ -100,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void swipeOp(View convertView, final int position) {
-            Button delete=ViewHolder.getView(convertView,R.id.delete);
+            Button delete = ViewHolder.getView(convertView, R.id.delete);
             delete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -111,8 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void doAction(int position, View convertView) {
-            ImageBean imageBean= (ImageBean) getItem(position);
-            TextView textView= ViewHolder.getView(convertView,R.id.text);
+            ImageBean imageBean = (ImageBean) getItem(position);
+            TextView textView = ViewHolder.getView(convertView, R.id.text);
             textView.setText(imageBean.getUrl());
         }
     }
