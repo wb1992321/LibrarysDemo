@@ -63,13 +63,14 @@ import rx.schedulers.Schedulers;
 public class SelecPictureActivity extends AppCompatActivity implements OnItemClickListener {
 
     public static final String RESULT_DATA = "result_data";
-
+    public static final String INTENT_EXTRA_COLUMN_COUNT = "intent_extra_column_count";
     public static final String INTENT_EXTRA_MAX_SIZE = "intent_extra_max_size";
     public static final String INTENT_EXTRA_MIN_SIZE = "intent_extra_min_size";
     public static final String INTENT_EXTRA_CONFIG_JSON = "intent_extra_config_json";
     public static final String INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH = "intent_extra_result_achieve_opproach";
     public static final String INTENT_EXTRA_SEL_PIC = "intent_extra_sel_pic";
 
+    private int columnCount = 4;
     private int maxSize = Integer.MAX_VALUE;
     private int minSize = -1;
     private String jsonfromatString = null;
@@ -88,16 +89,22 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
     private boolean fragmentShow;
     private MenuItem actionOk;
 
+    public static void open(Activity activity, int requestCode, int maxSize, int resuotAchieve, String jsonFormat, ArrayList<String> photoIds) {
+        open(activity, requestCode, maxSize, 4, resuotAchieve, jsonFormat, photoIds);
+    }
+
     /**
      * @param context       上下文
      * @param maxSize       最大选中的图片数据
+     * @param columnCount   每一行显示多少列 默认4
      * @param resuotAchieve 获取选中图片路径，0，通过forResult方法,1、通过EventBust
      * @param jsonFormat    返回选中图片对象字段配置
      * @param photoIds      已经选中的图片id
      */
-    public static void open(Activity activity, int requestCode, int maxSize, int resuotAchieve, String jsonFormat, ArrayList<String> photoIds) {
+    public static void open(Activity activity, int requestCode, int maxSize, int columnCount, int resuotAchieve, String jsonFormat, ArrayList<String> photoIds) {
         Intent intent = new Intent(activity, SelecPictureActivity.class);
         Bundle bundle = new Bundle();
+        bundle.putInt(INTENT_EXTRA_COLUMN_COUNT, columnCount);
         bundle.putInt(INTENT_EXTRA_MAX_SIZE, maxSize);
         bundle.putInt(INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH, resuotAchieve);
         if (!TextUtils.isEmpty(jsonFormat))
@@ -125,6 +132,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
             minSize = bundle.getInt(INTENT_EXTRA_MIN_SIZE);
             jsonfromatString = bundle.getString(INTENT_EXTRA_CONFIG_JSON);
             resultAchieveOpproach = bundle.getInt(INTENT_EXTRA_RESULT_ACHIEVE_OPPROACH);
+            columnCount = bundle.getInt(INTENT_EXTRA_COLUMN_COUNT, columnCount);
             ArrayList<String> list = bundle.getStringArrayList(INTENT_EXTRA_SEL_PIC);
             if (list != null && list.size() > 0) {
                 adapter.getSelectPhotoIds().addAll(list);
@@ -153,7 +161,7 @@ public class SelecPictureActivity extends AppCompatActivity implements OnItemCli
 
         adapter = new SelectPictureAdapter(this, maxSize);
         adapter.setOnItemClickListener(this);
-        PictureStagger stagger = new PictureStagger(adapter, 4);
+        PictureStagger stagger = new PictureStagger(adapter, columnCount);
         adapter.setLookup(stagger);
 //        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         layoutManager = new GridLayoutManager(this, stagger.getColumnCount(), LinearLayoutManager.VERTICAL, false);
