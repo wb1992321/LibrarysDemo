@@ -43,7 +43,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
     private int paddingleft = 10;
     private int imageSize = 0;
     private PictureStagger lookup = null;
-    public static final String TAG="SelectPictureAdapter";
+    public static final String TAG = "SelectPictureAdapter";
     private ArrayList<String> selPicIds = new ArrayList<>(0);
     private ArrayList<Long> selDate = new ArrayList<>(0);
 
@@ -104,14 +104,9 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         convertView.setLayoutParams(params);
         ImageView ivImage = ViewHolder.getView(convertView, R.id.iv_image);
 
-        Observable.defer(() -> Observable.just(model.getLocalPath()))
-                .map(s -> Glide.with(getContext())
-                        .load("file://"+s)
-                        .placeholder(R.drawable.default_image)
-                        .crossFade(100))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(d -> d.into(ivImage));
+        Glide.with(getContext())
+                .load(model.getLocalPath())
+                .crossFade(100).into(ivImage);
         CheckBox cbSel = ViewHolder.getView(convertView, R.id.cb_sel);
         cbSel.setOnCheckedChangeListener(null);
         cbSel.setTag(position);
@@ -235,7 +230,7 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
         return true;
     }
 
-    public List getDataList(){
+    public List getDataList() {
         return list;
     }
 
@@ -246,9 +241,9 @@ public class SelectPictureAdapter extends BaseAdapter implements CompoundButton.
 
     @Override
     protected void handleMsg(Message message) {
-        Log.d(TAG,"TYPE_ADD_LIST start");
+        Log.d(TAG, "TYPE_ADD_LIST start");
         super.handleMsg(message);
-        Log.d(TAG,"TYPE_ADD_LIST end");
+        Log.d(TAG, "TYPE_ADD_LIST end");
     }
 
 }
