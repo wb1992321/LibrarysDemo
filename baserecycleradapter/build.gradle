@@ -7,7 +7,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
 //设置Jitpack发布的Group
-//我的github账号是helen-x, 对应我的group就是com.github.helen-x
 group='com.github.wb1992321'
 
 android {
@@ -30,7 +29,5 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
     compile 'com.android.support:recyclerview-v7:25.3.1'
 }
