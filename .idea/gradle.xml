@@ -10,8 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/baserecycleradapter" />
-            <option value="$PROJECT_DIR$/carouselibrary" />
-            <option value="$PROJECT_DIR$/pictureselector" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

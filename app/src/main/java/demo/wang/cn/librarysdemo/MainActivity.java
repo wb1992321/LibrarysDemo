@@ -14,20 +14,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.alibaba.fastjson.JSONObject;
-import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
 
-import cn.wang.adapter.StringArrayAdapter;
-import cn.wang.adapter.SwipeAdapter;
-import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.RecyclerSwipeAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.adapter.beans.EmptyItem;
 import cn.wang.adapter.listeners.OnItemClickListener;
-import cn.wang.img.selector.activitys.SelecPictureActivity;
-import cn.wang.img.selector.services.LoadPictureService;
 import demo.wang.cn.librarysdemo.bean.ImageBean;
 
 /**
@@ -57,26 +50,26 @@ public class MainActivity extends AppCompatActivity {
                 adapter.deleteItem(position);
             }
         });
-        new RxPermissions(this).request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
-                .subscribe(aBoolean -> {
-                    if (aBoolean) {
-                        LoadPictureService.start(MainActivity.this);
-                    }
-                }, throwable -> Log.d("LoadPictureService", "异常", throwable));
-
-        JSONObject format = new JSONObject();
-        format.put("localPath", "url");
-
-        SelecPictureActivity.open(this, 1001, 10, 0, format.toJSONString(), null);
+//        new RxPermissions(this).request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
+//                .subscribe(aBoolean -> {
+//                    if (aBoolean) {
+//                        LoadPictureService.start(MainActivity.this);
+//                    }
+//                }, throwable -> Log.d("LoadPictureService", "异常", throwable));
+//
+//        JSONObject format = new JSONObject();
+//        format.put("localPath", "url");
+//
+//        SelecPictureActivity.open(this, 1001, 10, 0, format.toJSONString(), null);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001) {
-            Log.d("MainActivity", data.getStringExtra(SelecPictureActivity.RESULT_DATA));
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == 1001) {
+//            Log.d("MainActivity", data.getStringExtra(SelecPictureActivity.RESULT_DATA));
+//        }
+//    }
 
     private void getData() {
         ArrayList<ImageBean> list = new ArrayList<>();

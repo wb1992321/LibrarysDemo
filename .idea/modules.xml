@@ -5,8 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/LibrarysDemo.iml" filepath="$PROJECT_DIR$/LibrarysDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/baserecycleradapter/baserecycleradapter.iml" filepath="$PROJECT_DIR$/baserecycleradapter/baserecycleradapter.iml" />
-      <module fileurl="file://$PROJECT_DIR$/carouselibrary/carouselibrary.iml" filepath="$PROJECT_DIR$/carouselibrary/carouselibrary.iml" />
-      <module fileurl="file://$PROJECT_DIR$/pictureselector/pictureselector.iml" filepath="$PROJECT_DIR$/pictureselector/pictureselector.iml" />
     </modules>
   </component>
 </project>
