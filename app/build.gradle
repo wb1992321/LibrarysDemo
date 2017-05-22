@@ -6,7 +6,7 @@ retrolambda {
 }
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.3'
+    buildToolsVersion '25.0.2'
     defaultConfig {
         applicationId "demo.wang.cn.librarysdemo"
         minSdkVersion 14
