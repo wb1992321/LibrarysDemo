@@ -3,6 +3,13 @@ apply plugin: 'com.android.library'
 //
 //group='com.github.wb1992321'
 
+//启用Jitpack 插件
+apply plugin: 'com.github.dcendents.android-maven'
+
+//设置Jitpack发布的Group
+//我的github账号是helen-x, 对应我的group就是com.github.helen-x
+group='com.github.wb1992321'
+
 android {
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
