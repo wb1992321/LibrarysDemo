@@ -7,6 +7,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -972,7 +973,6 @@ public class SwipeLayout extends FrameLayout {
                 sX = event.getRawX();
                 sY = event.getRawY();
 
-
             case MotionEvent.ACTION_MOVE: {
                 //the drag state and the direction are already judged at onInterceptTouchEvent
                 checkCanDrag(event);
@@ -980,19 +980,27 @@ public class SwipeLayout extends FrameLayout {
                     getParent().requestDisallowInterceptTouchEvent(true);
                     mDragHelper.processTouchEvent(event);
                 }
+                if (Math.abs(event.getRawX() - sX) > 0 || Math.abs(event.getRawY() - sY) > 0) {
+                    return true;
+                }
                 break;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mIsBeingDragged = false;
                 mDragHelper.processTouchEvent(event);
+                if (Math.abs(event.getRawX() - sX) > 0 || Math.abs(event.getRawY() - sY) > 0) {
+                    return true;
+                }
                 break;
 
             default://handle other action, such as ACTION_POINTER_DOWN/UP
                 mDragHelper.processTouchEvent(event);
+                break;
         }
 
-        return super.onTouchEvent(event) || mIsBeingDragged || action == MotionEvent.ACTION_DOWN;
+//        return true;
+        return super.onTouchEvent(event);
     }
 
     public boolean isClickToClose() {

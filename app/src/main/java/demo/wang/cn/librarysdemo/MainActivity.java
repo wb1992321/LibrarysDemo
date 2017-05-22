@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import cn.wang.adapter.StringArrayAdapter;
 import cn.wang.adapter.SwipeAdapter;
 import cn.wang.adapter.bases.BaseAdapter;
+import cn.wang.adapter.bases.RecyclerSwipeAdapter;
 import cn.wang.adapter.bases.ViewHolder;
 import cn.wang.adapter.beans.EmptyItem;
 import cn.wang.adapter.listeners.OnItemClickListener;
@@ -85,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
         adapter.addList(false, list);
     }
 
-    class MyAdapter extends SwipeAdapter {
+
+    class MyAdapter extends RecyclerSwipeAdapter {
 
         public MyAdapter(Context context) {
             super(context);
