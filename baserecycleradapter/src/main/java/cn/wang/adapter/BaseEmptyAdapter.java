@@ -35,7 +35,7 @@ public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
     protected void handleMsg(Message message) {
         switch (message.what) {
             case TYPE_EMPTYITEM:
-                empty(emptySize);
+                doEmptyItem(emptySize);
                 break;
             default:
                 super.handleMsg(message);
@@ -81,11 +81,11 @@ public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
             case Constant.TYPE_UPDATE_LIST:
                 break;
             case Constant.TYPE_DELETE_ALL:
-                empty(emptySize);
+                doEmptyItem(emptySize);
                 break;
             case Constant.TYPE_DELETE_ITEM:
             case Constant.TYPE_ADD_LIST:
-                empty(emptySize);
+                doEmptyItem(emptySize);
                 break;
         }
     }
@@ -111,6 +111,8 @@ public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
                 notifyDataSetChanged();
             } else {
                 list.add(size, emptyItem);
+                notifyItemRangeInserted(size, getItemCount() - size);
+                notifyItemRangeChanged(size, getItemCount() - size);
             }
         }
     }
