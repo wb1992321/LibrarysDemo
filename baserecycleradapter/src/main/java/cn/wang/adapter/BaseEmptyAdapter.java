@@ -31,47 +31,47 @@ public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
 
     public abstract void doView(int position, View convertView);
 
-    @Override
-    protected void handleMsg(Message message) {
-        switch (message.what) {
-            case TYPE_EMPTYITEM:
-                doEmptyItem(emptySize);
-                break;
-            default:
-                super.handleMsg(message);
-                break;
-        }
-    }
-
-
-    private static final int TYPE_EMPTYITEM = -10000000;
-
-    @Override
-    protected void loadBegin(Message message) {
-        super.loadBegin(message);
-        switch (message.what) {
-            case Constant.TYPE_UPDATE_ITEM:
-            case Constant.TYPE_UPDATE_LIST:
-                break;
-            case Constant.TYPE_DELETE_ALL:
-                break;
-            case Constant.TYPE_DELETE_ITEM:
-                break;
-            case Constant.TYPE_ADD_LIST:
-                if (message.arg1 != -1)
-                    break;
-                if (message.obj != null) {
-                    int size = ((Collection<ItemBean>) message.obj).size();
-                    if (size <= 0) {
-                        if (list.size() > 0) list.clear();
-                        message.what = TYPE_EMPTYITEM;
-                    }
-                } else {
-                    message.what = TYPE_EMPTYITEM;
-                }
-                break;
-        }
-    }
+//    @Override
+//    protected void handleMsg(Message message) {
+//        switch (message.what) {
+//            case TYPE_EMPTYITEM:
+//                doEmptyItem(emptySize);
+//                break;
+//            default:
+//                super.handleMsg(message);
+//                break;
+//        }
+//    }
+//
+//
+//    private static final int TYPE_EMPTYITEM = -10000000;
+//
+//    @Override
+//    protected void loadBegin(Message message) {
+//        super.loadBegin(message);
+//        switch (message.what) {
+//            case Constant.TYPE_UPDATE_ITEM:
+//            case Constant.TYPE_UPDATE_LIST:
+//                break;
+//            case Constant.TYPE_DELETE_ALL:
+//                break;
+//            case Constant.TYPE_DELETE_ITEM:
+//                break;
+//            case Constant.TYPE_ADD_LIST:
+//                if (message.arg1 != -1)
+//                    break;
+//                if (message.obj != null) {
+//                    int size = ((Collection<ItemBean>) message.obj).size();
+//                    if (size <= 0) {
+//                        if (list.size() > 0) list.clear();
+//                        message.what = TYPE_EMPTYITEM;
+//                    }
+//                } else {
+//                    message.what = TYPE_EMPTYITEM;
+//                }
+//                break;
+//        }
+//    }
 
     @Override
     protected void loadFinish(Message message) {
