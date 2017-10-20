@@ -15,7 +15,7 @@ import cn.wang.adapter.beans.EmptyItem;
  * author : wangshuai Created on 2017/5/3
  * email : wangs1992321@gmail.com
  */
-public abstract class BaseEmptyAdapter extends BaseAdapter {
+public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
 
     public static final int EMPTY_CODE = -1000000;
     private EmptyItem emptyItem;
