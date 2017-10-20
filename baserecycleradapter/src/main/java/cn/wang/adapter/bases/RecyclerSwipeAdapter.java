@@ -29,6 +29,7 @@ public abstract class RecyclerSwipeAdapter extends BaseEmptyAdapter implements S
 
     public abstract void doAction(int position, View convertView);
 
+
     @Override
     public int getSwipeLayoutResourceId(int position) {
         return R.id.sl_root;

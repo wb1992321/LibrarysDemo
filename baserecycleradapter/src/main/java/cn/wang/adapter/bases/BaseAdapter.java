@@ -41,12 +41,14 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
     };
 
     protected void handleMsg(Message message) {
+        loadBegin(message);
         switch (message.what) {
             case Constant.TYPE_DELETE_ALL:
                 if (list.size() > 0) {
                     list.clear();
-                    super.notifyDataSetChanged();
                 }
+                loadFinish(message);
+                super.notifyDataSetChanged();
                 break;
             case Constant.TYPE_ADD_LIST:
                 if (message.obj != null) {
@@ -64,6 +66,7 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                         notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
                     }
                 }
+                loadFinish(message);
                 break;
             case Constant.TYPE_UPDATE_ITEM:
                 if (message.obj != null && message.arg1 >= 0 && message.arg1 < getItemCount()) {
@@ -75,6 +78,7 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                     notifyItemChanged(message.arg1);
 //                    notifyItemRangeChanged(message.arg1, getItemCount() - message.arg1);
                 }
+                loadFinish(message);
                 break;
             case Constant.TYPE_UPDATE_LIST:
                 if (message.obj != null && message.arg1 >= 0 && message.arg1 < getItemCount()) {
@@ -88,6 +92,7 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                 } else if (message.arg1 >= 0 && message.arg1 < getItemCount()) {
                     notifyItemRangeChanged(message.arg1, message.arg2);
                 }
+                loadFinish(message);
                 break;
             case Constant.TYPE_DELETE_ITEM:
                 if (message.arg1 < getItemCount() && message.arg1 >= 0) {
@@ -98,8 +103,17 @@ public abstract class BaseAdapter<T extends Object> extends RecyclerView.Adapter
                     if (list.size() > 0) list.clear();
                     super.notifyDataSetChanged();
                 }
+                loadFinish(message);
                 break;
         }
+    }
+
+    protected void loadBegin(Message message) {
+
+    }
+
+    protected void loadFinish(Message message) {
+
     }
 
     private OnItemClickListener onItemClickListener;

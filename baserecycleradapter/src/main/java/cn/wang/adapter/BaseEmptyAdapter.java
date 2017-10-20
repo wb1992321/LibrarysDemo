@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 
 import cn.wang.adapter.bases.BaseAdapter;
 import cn.wang.adapter.bases.BaseViewHolder;
+import cn.wang.adapter.bases.Constant;
 import cn.wang.adapter.bases.ItemBean;
 import cn.wang.adapter.beans.EmptyItem;
 
@@ -14,7 +15,7 @@ import cn.wang.adapter.beans.EmptyItem;
  * author : wangshuai Created on 2017/5/3
  * email : wangs1992321@gmail.com
  */
-public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
+public abstract class BaseEmptyAdapter extends BaseAdapter {
 
     public static final int EMPTY_CODE = -1000000;
     private EmptyItem emptyItem;
@@ -29,15 +30,66 @@ public abstract class BaseEmptyAdapter extends BaseAdapter<ItemBean> {
     public abstract void doView(int position, View convertView);
 
 
+//    @Override
+//    protected void loadBegin(Message message) {
+//        super.loadBegin(message);
+//        switch (message.what) {
+//            case Constant.TYPE_UPDATE_ITEM:
+//            case Constant.TYPE_UPDATE_LIST:
+//                break;
+//            case Constant.TYPE_DELETE_ALL:
+//                break;
+//            case Constant.TYPE_DELETE_ITEM:
+//            case Constant.TYPE_ADD_LIST:
+//
+//                break;
+//        }
+//    }
+
     @Override
-    protected void handleMsg(Message message) {
-        deleteItem(emptyItem);
-        super.handleMsg(message);
-        empty(emptySize);
+    protected void loadFinish(Message message) {
+        super.loadFinish(message);
+        switch (message.what) {
+            case Constant.TYPE_UPDATE_ITEM:
+            case Constant.TYPE_UPDATE_LIST:
+                break;
+            case Constant.TYPE_DELETE_ALL:
+                empty(emptySize);
+                break;
+            case Constant.TYPE_DELETE_ITEM:
+            case Constant.TYPE_ADD_LIST:
+                empty(emptySize);
+                break;
+        }
+    }
+
+//    @Override
+//    protected void handleMsg(Message message) {
+//        deleteItem(emptyItem);
+//        super.handleMsg(message);
+//        empty(emptySize);
+//    }
+
+    private void doEmptyItem(int size) {
+        if (emptyLayoutId() == 0) return;
+        if (list.size() <= size) {
+            if (containItem(emptyItem)) {
+                int position = getPosition(emptyItem);
+                if (position >= 0) {
+                    list.remove(position);
+                    list.add(position, emptyItem);
+                } else {
+                    list.add(emptyItem);
+                }
+                notifyDataSetChanged();
+            } else {
+                list.add(size, emptyItem);
+            }
+        }
     }
 
     private void empty(int size) {
-        if (emptyLayoutId()==0)return;
+        if (emptyLayoutId() == 0) return;
         if (list.size() <= size) {
             if (containItem(emptyItem)) updateItem(emptyItem);
             else add(size, emptyItem);
